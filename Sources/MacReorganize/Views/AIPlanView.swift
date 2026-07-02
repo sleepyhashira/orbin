@@ -19,11 +19,14 @@ struct AIPlanView: View {
         VStack(spacing: 0) {
             header
             Divider()
+                .overlay(Color.obsidianGlassBorder)
             planList
             Divider()
+                .overlay(Color.obsidianGlassBorder)
             footer
         }
         .frame(minWidth: 620, minHeight: 480)
+        .background(Color.obsidianBackground)
     }
 
     // MARK: - Header
@@ -32,21 +35,21 @@ struct AIPlanView: View {
         HStack(spacing: 14) {
             Image(systemName: "sparkles.rectangle.stack")
                 .font(.largeTitle)
-                .foregroundStyle(.purple)
+                .foregroundStyle(Color.obsidianPrimary)
                 .symbolRenderingMode(.hierarchical)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text("AI Reorganization Plan")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                Text("Qwen suggests moving **\(plan.moves.count) files** into **\(plan.groupedByFolder.count) folders**. Review and deselect any moves you don't want, then apply.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(.appHeadlineMedium())
+                    .foregroundColor(.white)
+                Text("Qwen suggests moving \(plan.moves.count) files into \(plan.groupedByFolder.count) folders. Review and deselect any moves you don't want, then apply.")
+                    .font(.appBodySmall())
+                    .foregroundStyle(Color.obsidianSecondary)
             }
             Spacer()
         }
         .padding(20)
-        .background(.regularMaterial)
+        .background(Color.obsidianSurfaceContainerLow)
     }
 
     // MARK: - Plan List (grouped by destination folder)
@@ -65,7 +68,9 @@ struct AIPlanView: View {
                 }
             }
         }
-        .listStyle(.inset(alternatesRowBackgrounds: true))
+        .listStyle(.inset)
+        .scrollContentBackground(.hidden)
+        .background(Color.obsidianSurface)
     }
 
     @ViewBuilder
@@ -73,21 +78,22 @@ struct AIPlanView: View {
         HStack(spacing: 6) {
             let needsCreate = moves.contains { !$0.folderExists }
             Image(systemName: needsCreate ? "folder.badge.plus" : "folder")
-                .foregroundStyle(needsCreate ? .purple : .secondary)
+                .foregroundStyle(needsCreate ? Color.obsidianPrimary : Color.obsidianSecondary)
             Text(name)
-                .fontWeight(.semibold)
+                .font(.appHeadlineSmall())
+                .foregroundColor(.white)
             if needsCreate {
                 Text("will be created")
-                    .font(.caption)
-                    .foregroundStyle(.purple)
+                    .font(.appLabelCaps())
+                    .foregroundStyle(Color.obsidianPrimary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(.purple.opacity(0.1), in: Capsule())
+                    .background(Color.obsidianPrimary.opacity(0.12), in: Capsule())
             }
             Spacer()
             Text("\(moves.count) file\(moves.count == 1 ? "" : "s")")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(.appLabelCode())
+                .foregroundStyle(Color.obsidianSecondary)
         }
     }
 
@@ -98,16 +104,17 @@ struct AIPlanView: View {
                 .toggleStyle(.checkbox)
 
             Image(systemName: move.wrappedValue.file.effectiveCategory.systemImage)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.obsidianSecondary)
                 .frame(width: 16)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(move.wrappedValue.file.name)
+                    .font(.appBodyMedium())
                     .lineLimit(1)
-                    .foregroundStyle(move.wrappedValue.isSelected ? .primary : .tertiary)
+                    .foregroundStyle(move.wrappedValue.isSelected ? Color.white : Color.obsidianSecondary)
                 Text(move.wrappedValue.file.relativePath)
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .font(.appLabelCode())
+                    .foregroundStyle(Color.obsidianSecondary.opacity(0.6))
                     .lineLimit(1)
             }
 
@@ -117,13 +124,17 @@ struct AIPlanView: View {
             HStack(spacing: 4) {
                 Image(systemName: "arrow.right")
                     .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(Color.obsidianSecondary)
                 Text(move.wrappedValue.suggestedFolder)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.appLabelCode())
+                    .foregroundStyle(Color.obsidianPrimary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(.quaternary, in: RoundedRectangle(cornerRadius: 4))
+                    .background(Color.obsidianSurfaceContainerHigh, in: RoundedRectangle(cornerRadius: AppCornerRadius.sm))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: AppCornerRadius.sm)
+                            .stroke(Color.obsidianGlassBorder, lineWidth: 1)
+                    )
             }
             .opacity(move.wrappedValue.isSelected ? 1 : 0.4)
         }
@@ -133,22 +144,29 @@ struct AIPlanView: View {
     // MARK: - Footer
 
     private var footer: some View {
-        HStack(spacing: 12) {
+        let applyDisabled = selectedCount == 0
+        return HStack(spacing: 12) {
             // Select all / none
-            Button("Select All")  { setAll(true)  }.buttonStyle(.link)
-            Button("Select None") { setAll(false) }.buttonStyle(.link)
+            Button("Select All")  { setAll(true)  }
+                .font(.appLabelCaps())
+                .foregroundColor(Color.obsidianPrimary)
+                .buttonStyle(.link)
+            Button("Select None") { setAll(false) }
+                .font(.appLabelCaps())
+                .foregroundColor(Color.obsidianPrimary)
+                .buttonStyle(.link)
 
             Spacer()
 
             // Summary
             VStack(alignment: .trailing, spacing: 2) {
                 Text("\(selectedCount) of \(plan.moves.count) moves selected")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.appBodySmall())
+                    .foregroundStyle(Color.obsidianSecondary)
                 if newFolderCount > 0 {
                     Text("\(newFolderCount) new folder\(newFolderCount == 1 ? "" : "s") will be created")
-                        .font(.caption2)
-                        .foregroundStyle(.purple)
+                        .font(.appLabelCode())
+                        .foregroundStyle(Color.obsidianPrimary)
                 }
             }
 
@@ -156,6 +174,7 @@ struct AIPlanView: View {
                 store.discardReorganizePlan()
                 dismiss()
             }
+            .buttonStyle(SecondaryButtonStyle())
             .keyboardShortcut(.escape)
 
             Button("Apply \(selectedCount) Move\(selectedCount == 1 ? "" : "s")") {
@@ -164,13 +183,18 @@ struct AIPlanView: View {
                 store.applyReorganizePlan()
                 dismiss()
             }
+            .buttonStyle(PrimaryButtonStyle(isDisabled: applyDisabled))
+            .disabled(applyDisabled)
             .keyboardShortcut(.return)
-            .buttonStyle(.borderedProminent)
-            .tint(.purple)
-            .disabled(selectedCount == 0)
         }
         .padding(16)
-        .background(.regularMaterial)
+        .background(Color.obsidianSurfaceContainerLow)
+        .overlay(
+            Rectangle()
+                .frame(height: 1)
+                .foregroundColor(Color.obsidianGlassBorder),
+            alignment: .top
+        )
     }
 
     private func setAll(_ value: Bool) {

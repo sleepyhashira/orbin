@@ -2,85 +2,116 @@ import SwiftUI
 
 struct SidebarView: View {
     @ObservedObject var store: OrganizerStore
-    @State private var isCompact = false
 
     var body: some View {
-        List(selection: $store.selection) {
-            Section {
-                sidebarItem(
-                    title: "Overview",
-                    systemImage: "chart.pie",
-                    countText: "\(Formatters.count(store.summary.fileCount)) files",
-                    helpText: "Overview – \(Formatters.count(store.summary.fileCount)) files"
-                )
-                .tag(SidebarSelection.overview)
-            }
+        VStack(alignment: .leading, spacing: 0) {
+            // App title
+            Text("Mac Reorganize")
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundColor(.white)
+                .padding(.horizontal, 16)
+                .padding(.top, 14)
+                .padding(.bottom, 10)
 
-            Section(isCompact ? "" : "Groups") {
-                ForEach(FileCategory.allCases) { category in
-                    let count = store.summary.categories[category, default: 0]
-                    sidebarItem(
-                        title: category.rawValue,
-                        systemImage: category.systemImage,
-                        countText: "\(Formatters.count(count)) files",
-                        helpText: "\(category.rawValue) – \(Formatters.count(count)) files"
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+
+                    // ── Groups ──
+                    sectionHeader("GROUPS")
+
+                    sidebarRow(
+                        title: "Overview",
+                        systemImage: "chart.pie",
+                        tag: .overview
                     )
-                    .tag(SidebarSelection.category(category))
+
+                    ForEach(FileCategory.allCases) { category in
+                        sidebarRow(
+                            title: category.rawValue,
+                            systemImage: category.systemImage,
+                            tag: .category(category)
+                        )
+                    }
+
+                    Spacer().frame(height: 20)
+
+                    // ── Insights ──
+                    sectionHeader("INSIGHTS")
+
+                    sidebarRow(
+                        title: "Large Files",
+                        systemImage: "internaldrive",
+                        tag: .largeFiles
+                    )
+
+                    sidebarRow(
+                        title: "Duplicates",
+                        systemImage: "doc.on.doc",
+                        tag: .duplicates
+                    )
+
+                    // AI status (non-selectable)
+                    if store.aiStatus != .idle {
+                        Spacer().frame(height: 6)
+                        AIStatusBadge(aiStatus: store.aiStatus)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 4)
+                    }
                 }
-            }
-
-            Section(isCompact ? "" : "Insights") {
-                sidebarItem(
-                    title: "Large Files",
-                    systemImage: "internaldrive",
-                    countText: "\(Formatters.count(store.summary.largestFiles.count)) shown",
-                    helpText: "Large Files – \(Formatters.count(store.summary.largestFiles.count)) shown"
-                )
-                .tag(SidebarSelection.largeFiles)
-
-                sidebarItem(
-                    title: "Duplicates",
-                    systemImage: "doc.on.doc",
-                    countText: "\(Formatters.count(store.duplicateGroups.count)) groups",
-                    helpText: "Duplicates – \(Formatters.count(store.duplicateGroups.count)) groups"
-                )
-                .tag(SidebarSelection.duplicates)
-            }
-
-            // AI classification status row (non-selectable)
-            if store.aiStatus != .idle {
-                Section {
-                    AIStatusBadge(aiStatus: store.aiStatus)
-                        .padding(.vertical, 4)
-                }
+                .padding(.bottom, 16)
             }
         }
-        .listStyle(.sidebar)
-        .overlay(
-            GeometryReader { geo in
-                Color.clear
-                    .onAppear { isCompact = geo.size.width < 160 }
-                    .onChange(of: geo.size.width) { newWidth in
-                        withAnimation(.easeInOut(duration: 0.15)) {
-                            isCompact = newWidth < 160
-                        }
-                    }
-            }
-        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color.obsidianSurfaceContainerLow)
     }
 
-    @ViewBuilder
-    private func sidebarItem(title: String, systemImage: String, countText: String, helpText: String) -> some View {
-        if isCompact {
-            Label(title, systemImage: systemImage)
-                .labelStyle(.iconOnly)
-                .font(.title3)
-                .frame(maxWidth: .infinity)
-                .help(helpText)
-        } else {
-            Label(title, systemImage: systemImage)
-                .badge(Text(countText))
-                .help(helpText)
+    // MARK: - Section Header
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.system(size: 10, weight: .semibold, design: .rounded))
+            .foregroundStyle(Color.obsidianOutline)
+            .tracking(0.8)
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 6)
+    }
+
+    // MARK: - Sidebar Row
+
+    private func sidebarRow(title: String, systemImage: String, tag: SidebarSelection) -> some View {
+        let isSelected = store.selection == tag
+
+        return Button {
+            withAnimation(.easeInOut(duration: 0.15)) {
+                store.selection = tag
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundColor(isSelected ? Color.obsidianPrimaryContainer : Color.obsidianSecondary)
+                    .frame(width: 18, alignment: .center)
+
+                Text(title)
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                    .foregroundColor(isSelected ? .white : Color.obsidianOnSurface)
+
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(isSelected ? Color.obsidianPrimaryContainer.opacity(0.18) : Color.clear)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(isSelected ? Color.obsidianPrimaryContainer.opacity(0.3) : Color.clear, lineWidth: 1)
+            )
         }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 1)
     }
 }

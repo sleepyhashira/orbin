@@ -9,23 +9,30 @@ struct ContentView: View {
     var body: some View {
         NavigationSplitView {
             SidebarView(store: store)
-                .navigationSplitViewColumnWidth(min: 60, ideal: 260, max: 320)
+                .navigationSplitViewColumnWidth(min: 160, ideal: 200, max: 260)
         } detail: {
             DetailView(store: store, thumbnails: thumbnails)
         }
+        .background(Color.obsidianBackground)
         .toolbar {
-            ToolbarItemGroup {
+            ToolbarItemGroup(placement: .automatic) {
+                Spacer()
+
+                // ── Search ──
+                // (handled by .searchable below)
+
+                // ── Toolbar icons ──
                 Button {
                     store.chooseFolder()
                 } label: {
-                    Label("Open Folder", systemImage: "folder.badge.plus")
+                    Image(systemName: "folder.badge.plus")
                 }
                 .help("Open a folder to scan and organize.")
 
                 Button {
                     store.rescan()
                 } label: {
-                    Label("Rescan", systemImage: "arrow.clockwise")
+                    Image(systemName: "arrow.clockwise")
                 }
                 .disabled(store.rootURL == nil)
                 .help("Scan the selected folder again.")
@@ -34,60 +41,38 @@ struct ContentView: View {
                     Button {
                         store.cancelScan()
                     } label: {
-                        Label("Cancel", systemImage: "xmark.circle")
+                        Image(systemName: "xmark.circle")
                     }
                     .help("Cancel the current folder scan.")
                 }
 
-                Divider()
-
-                // ── AI Plan button ────────────────────────────────────────
+                // ── AI Plan button ──
                 if store.planStatus.isGenerating {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 4) {
                         ProgressView().controlSize(.small)
                         Text(store.planStatus.message)
-                            .font(.caption)
+                            .font(.system(size: 11))
                             .foregroundStyle(.secondary)
                     }
                 } else {
                     Button {
                         store.generateReorganizePlan()
                     } label: {
-                        Label("Suggest AI Plan", systemImage: "wand.and.stars")
+                        Image(systemName: "wand.and.stars")
                     }
                     .disabled(store.files.isEmpty || store.planStatus.isGenerating)
-                    .help("Ask Qwen AI to suggest how to organize files into folders.")
+                    .help("Ask Qwen AI to suggest how to organize files.")
                 }
 
-                // AI classification status badge
+                // AI status badge
                 AIStatusBadge(aiStatus: store.aiStatus)
-                    .padding(.horizontal, 2)
 
                 Button {
                     showAISettings = true
                 } label: {
-                    Label("AI Settings", systemImage: "sparkles")
+                    Image(systemName: "gearshape")
                 }
-                .help("Configure AI classification using local Qwen model.")
-
-                HStack(spacing: 4) {
-                    Image(systemName: "sun.max.fill")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
-                    
-                    Toggle("", isOn: Binding(
-                        get: { colorScheme == .dark },
-                        set: { isDark in colorScheme = isDark ? .dark : .light }
-                    ))
-                    .toggleStyle(.switch)
-                    .labelsHidden()
-                    .controlSize(.small)
-                    
-                    Image(systemName: "moon.fill")
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary)
-                }
-                .help("Toggle Dark Mode")
+                .help("Configure AI classification.")
             }
         }
         .sheet(isPresented: $showAISettings) {
@@ -96,8 +81,7 @@ struct ContentView: View {
         .sheet(item: $store.pendingPlan) { plan in
             AIPlanView(store: store, plan: plan)
         }
-        .searchable(text: $store.searchText, placement: .toolbar, prompt: "Search files")
-        // Auto-open the plan sheet when the plan becomes ready
+        .searchable(text: $store.searchText, placement: .toolbar, prompt: "Search files…")
         .onChange(of: store.planStatus) { newStatus in
             if case .ready = newStatus {
                 // pendingPlan is already set; the sheet binding opens automatically

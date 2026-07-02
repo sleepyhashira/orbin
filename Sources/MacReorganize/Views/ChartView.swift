@@ -28,67 +28,14 @@ struct FileDistributionChart: View {
         }
     }
 
-    private var chartTitle: String {
-        switch selection {
-        case .overview:          return "File Types"
-        case .category(let cat): return "\(cat.rawValue) – by Extension"
-        case .largeFiles:        return "Large Files by Type"
-        case .duplicates:        return "Duplicates by Type"
-        }
-    }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(chartTitle)
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundStyle(.secondary)
-
-            if slices.isEmpty {
-                Text("No data")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-                    .frame(maxWidth: .infinity, minHeight: 140, alignment: .center)
-            } else {
-                HStack(alignment: .center, spacing: 16) {
-                    // ── Donut chart (Canvas-based, works on macOS 13+) ──
-                    DonutChart(slices: slices, highlighted: $highlighted, totalCount: files.count)
-                        .frame(width: 140, height: 140)
-
-                    // ── Legend ──
-                    VStack(alignment: .leading, spacing: 5) {
-                        ForEach(slices.prefix(8)) { slice in
-                            HStack(spacing: 6) {
-                                RoundedRectangle(cornerRadius: 2)
-                                    .fill(slice.color)
-                                    .frame(width: 8, height: 8)
-                                Text(slice.label)
-                                    .font(.caption)
-                                    .lineLimit(1)
-                                Spacer(minLength: 4)
-                                Text("\(slice.count)")
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
-                                    .monospacedDigit()
-                                    .foregroundStyle(.secondary)
-                            }
-                            .opacity(highlighted == nil || highlighted == slice.id ? 1 : 0.35)
-                            .contentShape(Rectangle())
-                            .onHover { inside in
-                                withAnimation(.easeInOut(duration: 0.15)) {
-                                    highlighted = inside ? slice.id : nil
-                                }
-                            }
-                        }
-                        if slices.count > 8 {
-                            Text("+ \(slices.count - 8) more")
-                                .font(.caption2)
-                                .foregroundStyle(.tertiary)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
+        if slices.isEmpty {
+            Text("No data")
+                .font(.system(size: 11))
+                .foregroundStyle(Color.obsidianSecondary)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        } else {
+            DonutChart(slices: slices, highlighted: $highlighted, totalCount: files.count)
         }
     }
 
@@ -147,8 +94,8 @@ struct DonutChart: View {
             let cx = size.width / 2
             let cy = size.height / 2
             let outerR = min(cx, cy) - 2
-            let innerR = outerR * 0.52
-            let gap: Double = 0.018   // radians between slices
+            let innerR = outerR * 0.58
+            let gap: Double = 0.02
 
             var startAngle = Angle.degrees(-90)
 
@@ -158,7 +105,7 @@ struct DonutChart: View {
                 let endAngle = startAngle + sweep
 
                 let isHL = highlighted == nil || highlighted == slice.id
-                let scale: CGFloat = (highlighted == slice.id) ? 1.06 : 1.0
+                let scale: CGFloat = (highlighted == slice.id) ? 1.04 : 1.0
 
                 var path = Path()
                 path.addArc(center: CGPoint(x: cx, y: cy),
@@ -173,22 +120,7 @@ struct DonutChart: View {
                             clockwise: true)
                 path.closeSubpath()
 
-                ctx.fill(path, with: .color(slice.color.opacity(isHL ? 1 : 0.3)))
-
-                // Percentage label on large-enough slices
-                if fraction >= 0.12 {
-                    let midAngle = startAngle + Angle.radians(fraction * .pi - gap / 2)
-                    let labelR = (outerR + innerR) / 2 * scale
-                    let lx = cx + labelR * cos(midAngle.radians)
-                    let ly = cy + labelR * sin(midAngle.radians)
-                    let pct = "\(Int(fraction * 100))%"
-                    ctx.draw(
-                        Text(pct)
-                            .font(.system(size: 9, weight: .semibold))
-                            .foregroundColor(.white),
-                        at: CGPoint(x: lx, y: ly)
-                    )
-                }
+                ctx.fill(path, with: .color(slice.color.opacity(isHL ? 1 : 0.25)))
 
                 startAngle = endAngle + Angle.radians(gap)
             }
@@ -198,9 +130,11 @@ struct DonutChart: View {
             VStack(spacing: 0) {
                 Text("\(totalCount)")
                     .font(.system(size: 18, weight: .bold, design: .rounded))
-                Text("files")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.white)
+                Text("FILES")
+                    .font(.system(size: 8, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color.obsidianOutline)
+                    .tracking(0.5)
             }
         }
     }
@@ -211,29 +145,29 @@ struct DonutChart: View {
 extension FileCategory {
     var chartColor: Color {
         switch self {
-        case .images:       return Color(hue: 0.58, saturation: 0.70, brightness: 0.85)
-        case .documents:    return Color(hue: 0.12, saturation: 0.75, brightness: 0.90)
-        case .audio:        return Color(hue: 0.82, saturation: 0.60, brightness: 0.85)
-        case .video:        return Color(hue: 0.95, saturation: 0.65, brightness: 0.85)
-        case .archives:     return Color(hue: 0.38, saturation: 0.55, brightness: 0.75)
-        case .code:         return Color(hue: 0.52, saturation: 0.65, brightness: 0.80)
-        case .applications: return Color(hue: 0.07, saturation: 0.70, brightness: 0.85)
-        case .other:        return Color(hue: 0.00, saturation: 0.00, brightness: 0.55)
+        case .images:       return Color.obsidianPrimaryContainer
+        case .documents:    return Color.obsidianPrimary
+        case .audio:        return Color.obsidianPrimaryFixed
+        case .video:        return Color.obsidianInversePrimary
+        case .archives:     return Color.obsidianOutline
+        case .code:         return Color.obsidianOnSurfaceVariant
+        case .applications: return Color.obsidianSecondary
+        case .other:        return Color.obsidianTertiary
         }
     }
 }
 
 extension Color {
     static let chartPalette: [Color] = [
-        Color(hue: 0.58, saturation: 0.70, brightness: 0.85),
-        Color(hue: 0.12, saturation: 0.75, brightness: 0.90),
-        Color(hue: 0.82, saturation: 0.60, brightness: 0.85),
-        Color(hue: 0.38, saturation: 0.55, brightness: 0.75),
-        Color(hue: 0.95, saturation: 0.65, brightness: 0.85),
-        Color(hue: 0.52, saturation: 0.65, brightness: 0.80),
-        Color(hue: 0.07, saturation: 0.70, brightness: 0.85),
-        Color(hue: 0.68, saturation: 0.55, brightness: 0.80),
-        Color(hue: 0.25, saturation: 0.60, brightness: 0.80),
-        Color(hue: 0.45, saturation: 0.65, brightness: 0.85),
+        Color.obsidianPrimaryContainer,
+        Color.obsidianPrimary,
+        Color.obsidianPrimaryFixed,
+        Color.obsidianInversePrimary,
+        Color.obsidianOutline,
+        Color.obsidianOnSurfaceVariant,
+        Color.obsidianSecondary,
+        Color.obsidianTertiary,
+        Color(hex: "#ffdbcc"),
+        Color(hex: "#dfc0b2")
     ]
 }

@@ -11,14 +11,16 @@ struct FileTableView: View {
             TableColumn("Name") { file in
                 HStack(spacing: 10) {
                     ThumbnailView(file: file, thumbnails: thumbnails)
-                        .frame(width: 34, height: 34)
+                        .frame(width: 30, height: 30)
 
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 1) {
                         Text(file.name)
+                            .font(.system(size: 13, weight: .regular))
+                            .foregroundColor(.white)
                             .lineLimit(1)
                         Text(file.relativePath)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(.system(size: 10, weight: .regular, design: .monospaced))
+                            .foregroundStyle(Color.obsidianSecondary.opacity(0.7))
                             .lineLimit(1)
                     }
                 }
@@ -30,20 +32,25 @@ struct FileTableView: View {
             }
 
             TableColumn("Kind") { file in
-                Label(file.category.rawValue, systemImage: file.category.systemImage)
+                Text(file.typeDescription)
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.obsidianSecondary)
             }
-            .width(min: 120, ideal: 150)
+            .width(min: 110, ideal: 140)
 
             TableColumn("Size") { file in
                 Text(Formatters.fileSize(file.size))
-                    .monospacedDigit()
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundColor(.white)
             }
-            .width(min: 90, ideal: 110)
+            .width(min: 70, ideal: 90)
 
             TableColumn("Modified") { file in
                 Text(file.modifiedAt?.formatted(date: .abbreviated, time: .omitted) ?? "-")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.obsidianSecondary)
             }
-            .width(min: 120, ideal: 140)
+            .width(min: 100, ideal: 130)
         }
         .overlay {
             if files.isEmpty {
@@ -68,6 +75,8 @@ struct FileTableView: View {
     }
 }
 
+// MARK: - Thumbnail cell
+
 private struct ThumbnailView: View {
     let file: FileItem
     @ObservedObject var thumbnails: ThumbnailProvider
@@ -80,15 +89,19 @@ private struct ThumbnailView: View {
                     .scaledToFit()
             } else {
                 Image(systemName: file.category.systemImage)
-                    .foregroundStyle(.secondary)
-                    .font(.title3)
+                    .foregroundStyle(Color.obsidianSecondary)
+                    .font(.system(size: 14))
             }
         }
         .padding(3)
-        .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .background(Color.obsidianSurfaceContainerHigh)
+        .clipShape(RoundedRectangle(cornerRadius: 4))
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .stroke(Color.obsidianGlassBorder, lineWidth: 1)
+        )
         .onAppear {
-            thumbnails.thumbnail(for: file, size: CGSize(width: 68, height: 68))
+            thumbnails.thumbnail(for: file, size: CGSize(width: 60, height: 60))
         }
     }
 }
