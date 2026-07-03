@@ -4,7 +4,7 @@ struct ContentView: View {
     @ObservedObject var store: OrganizerStore
     @StateObject private var thumbnails = ThumbnailProvider()
     @State private var showAISettings = false
-    @AppStorage("appColorScheme") private var colorScheme: AppColorScheme = .system
+    @AppStorage("appColorScheme") private var colorScheme: AppColorScheme = .dark
 
     var body: some View {
         NavigationStack {
@@ -93,6 +93,6 @@ struct ContentView: View {
                 // pendingPlan is already set; the sheet binding opens automatically
             }
         }
-        .preferredColorScheme(colorScheme.colorScheme)
+        .preferredColorScheme(.dark)
     }
 }

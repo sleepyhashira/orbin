@@ -6,7 +6,7 @@ struct SidebarView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // App title
-            Text("Mac Reorganize")
+            Text("Orbin")
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
                 .foregroundColor(.white)
                 .padding(.horizontal, 16)

@@ -60,7 +60,7 @@ enum OllamaSettings {
 
     /// Walk up from the app bundle to find the `.ai-config` file in the project root.
     private static func findConfigFile() -> URL? {
-        // In development: bundle is at <root>/dist/MacReorganize.app
+        // In development: bundle is at <root>/dist/Orbin.app
         // Config is at   <root>/.ai-config
         var dir = Bundle.main.bundleURL
         for _ in 0..<4 {

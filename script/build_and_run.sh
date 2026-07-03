@@ -2,8 +2,8 @@
 set -euo pipefail
 
 MODE="${1:-run}"
-APP_NAME="MacReorganize"
-BUNDLE_ID="com.local.MacReorganize"
+APP_NAME="Orbin"
+BUNDLE_ID="com.local.Orbin"
 MIN_SYSTEM_VERSION="13.0"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -30,7 +30,7 @@ CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
 print_header() {
   echo ""
   echo -e "${CYAN}${BOLD}╔══════════════════════════════════════════╗${RESET}"
-  echo -e "${CYAN}${BOLD}║   MacReorganize – AI Model Setup         ║${RESET}"
+  echo -e "${CYAN}${BOLD}║   Orbin – AI Model Setup         ║${RESET}"
   echo -e "${CYAN}${BOLD}╚══════════════════════════════════════════╝${RESET}"
   echo ""
 }
@@ -59,6 +59,12 @@ select_model() {
     SAVED_MODEL=$(grep '^OLLAMA_MODEL=' "$AI_CONFIG_FILE" 2>/dev/null | cut -d'=' -f2 || true)
   else
     SAVED_MODEL=""
+  fi
+
+  # If running in CLI mode or non-interactively, skip interactive prompt
+  if [[ "$MODE" == -* || "$MODE" == "help" || ! -t 0 ]]; then
+    SELECTED_MODEL="${SAVED_MODEL:-qwen2.5:1.5b}"
+    return
   fi
 
   print_header
@@ -210,6 +216,9 @@ case "$MODE" in
   run)
     open_app
     ;;
+  --cli|--organize|--help|-h)
+    "$APP_BINARY" "$@"
+    ;;
   --debug|debug)
     lldb -- "$APP_BINARY"
     ;;
@@ -227,7 +236,12 @@ case "$MODE" in
     pgrep -x "$APP_NAME" >/dev/null
     ;;
   *)
-    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify]" >&2
-    exit 2
+    # If mode starts with - or is a directory path, try running CLI mode directly
+    if [[ "$MODE" == -* || -d "$MODE" ]]; then
+      "$APP_BINARY" "$@"
+    else
+      echo "usage: $0 [run|--cli|--debug|--logs|--telemetry|--verify]" >&2
+      exit 2
+    fi
     ;;
 esac

@@ -27,6 +27,7 @@ struct AIPlanView: View {
         }
         .frame(minWidth: 620, minHeight: 480)
         .background(Color.obsidianBackground)
+        .preferredColorScheme(.dark)
     }
 
     // MARK: - Header

@@ -2,17 +2,17 @@
 import PackageDescription
 
 let package = Package(
-    name: "MacReorganize",
+    name: "Orbin",
     platforms: [
         .macOS(.v13)
     ],
     products: [
-        .executable(name: "MacReorganize", targets: ["MacReorganize"])
+        .executable(name: "Orbin", targets: ["Orbin"])
     ],
     targets: [
         .executableTarget(
-            name: "MacReorganize",
-            path: "Sources/MacReorganize"
+            name: "Orbin",
+            path: "Sources/Orbin"
         )
     ]
 )

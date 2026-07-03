@@ -1,8 +1,8 @@
-# CLAUDE.md — MacReorganize (Orbin)
+# CLAUDE.md — Orbin
 
 ## What is this project?
 
-MacReorganize is a native macOS SwiftUI desktop app that scans a user-selected folder, classifies every file by type (Images, Documents, Audio, Video, Archives, Code, Applications, Other), and suggests an AI-powered reorganization plan. It uses a **local Qwen model via Ollama** — fully offline, no cloud APIs.
+Orbin is a native macOS SwiftUI desktop app that scans a user-selected folder, classifies every file by type (Images, Documents, Audio, Video, Archives, Code, Applications, Other), and suggests an AI-powered reorganization plan. It uses a **local Qwen model via Ollama** — fully offline, no cloud APIs.
 
 ## Build & Run
 
@@ -14,7 +14,7 @@ MacReorganize is a native macOS SwiftUI desktop app that scans a user-selected f
 swift build
 
 # Run after swift build
-.build/debug/MacReorganize
+.build/debug/Orbin
 ```
 
 - Swift Package Manager, no Xcode project
@@ -24,8 +24,8 @@ swift build
 ## Project Structure
 
 ```
-Sources/MacReorganize/
-├── App/                    # MacReorganizeApp.swift — @main entry point
+Sources/Orbin/
+├── App/                    # OrbinApp.swift — @main entry point
 ├── Models/                 # Data types (FileItem, FileCategory, FileMovePlan, AppColorScheme, SidebarSelection)
 ├── Services/               # Business logic (no UI)
 │   ├── OllamaClassifier    # Actor — LLM API client (classify, suggest folder, ping)

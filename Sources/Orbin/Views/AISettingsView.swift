@@ -158,6 +158,7 @@ struct AISettingsView: View {
                 }
             }
             .formStyle(.grouped)
+            .scrollContentBackground(.hidden)
             .disabled(!isEnabled)
             .animation(.easeInOut(duration: 0.2), value: isEnabled)
 
@@ -191,6 +192,7 @@ struct AISettingsView: View {
         }
         .frame(width: 480)
         .background(Color.obsidianBackground)
+        .preferredColorScheme(.dark)
         .fixedSize(horizontal: false, vertical: true)
         .onAppear { checkConnection() }
     }
