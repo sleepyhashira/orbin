@@ -4,6 +4,11 @@ An AI-powered local macOS utility that reorganizes cluttered folders by automati
 
 The interface is custom-themed (accented in rust/orange) to match the app icon, featuring a modern SwiftUI Split View and native Light/Dark mode toggling.
 
+<p align="center">
+  <img src="assets/ui-snapshot/snapshot-1.png" width="48%" />
+  <img src="assets/ui-snapshot/snapshot-2.png" width="48%" />
+</p>
+
 ---
 
 ## 🏗️ Architecture & Workflow

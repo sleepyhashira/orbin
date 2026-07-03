@@ -217,14 +217,24 @@ actor OllamaClassifier {
 
     // MARK: - Internal
 
+    /// Classify a file into a category based on its extension/type.
+    /// The prompt gives Qwen a clear extension→category mapping table so
+    /// it doesn't have to guess — just match the file extension.
     private func classifySingle(file: FileItem) async throws -> FileCategory {
         let prompt = """
-        You are a file organizer assistant. \
-        Given a file name, classify it into exactly one of these categories: \
-        Images, Documents, Audio, Video, Archives, Code, Applications, Other.
-        
-        File name: "\(file.name)"
-        
+        Classify this file into exactly one category based on its extension. \
+        Use these rules:
+        - Images: png, jpg, jpeg, gif, bmp, svg, webp, tiff, ico, heic, raw
+        - Documents: pdf, doc, docx, txt, rtf, odt, xls, xlsx, csv, ppt, pptx, pages, numbers, key, md
+        - Audio: mp3, wav, aac, flac, ogg, m4a, wma, aiff
+        - Video: mp4, mov, avi, mkv, wmv, flv, webm, m4v, mpg, mpeg
+        - Archives: zip, tar, gz, bz2, xz, 7z, rar, dmg, iso
+        - Code: swift, js, ts, tsx, jsx, py, rb, go, rs, java, c, cpp, h, html, css, scss, json, yaml, yml, toml, xml, sh, sql
+        - Applications: app, exe, msi, pkg, deb, rpm
+        - Other: anything not listed above
+
+        File: "\(file.name)"
+
         Reply with only the category name, nothing else.
         """
 
@@ -232,18 +242,27 @@ actor OllamaClassifier {
         return FileClassifier.fromAIResponse(response) ?? file.category
     }
 
+    /// Suggest a folder name for the file. We want simple category-level grouping
+    /// (e.g. "Images", "Documents", "Code") — no sub-folders or creative names.
     private func suggestFolder(for file: FileItem) async throws -> String {
         let prompt = """
-        You are a file organizer. \
-        Given a file name, suggest a short folder name (2-4 words max, no special characters, \
-        use spaces not slashes) to organize it into.
-        Good examples: "Finance", "Work Documents", "Photos", "Code Projects", "Music", "Videos"
+        You are a file organizer. Based on the file extension, return the \
+        category folder name where this file belongs.
+        Use only these folder names:
+        - Images (for png, jpg, jpeg, gif, svg, webp, heic, bmp, tiff, ico, raw)
+        - Documents (for pdf, doc, docx, txt, rtf, xls, xlsx, csv, ppt, pptx, pages, numbers, key, md)
+        - Audio (for mp3, wav, aac, flac, ogg, m4a, wma, aiff)
+        - Video (for mp4, mov, avi, mkv, wmv, flv, webm, m4v)
+        - Archives (for zip, tar, gz, 7z, rar, dmg, iso)
+        - Code (for swift, js, ts, py, go, rs, java, c, cpp, html, css, json, yaml, sh, sql)
+        - Applications (for app, exe, pkg, dmg)
+        - Other (for anything not listed)
 
-        File name: "\(file.name)"
+        File: "\(file.name)"
 
         Reply with only the folder name, nothing else.
         """
-        let raw = try await generate(prompt: prompt, numPredict: 24, retries: 3)
+        let raw = try await generate(prompt: prompt, numPredict: 16, retries: 3)
         return raw.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
